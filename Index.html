@@ -45,6 +45,46 @@ th{font-weight:600;background:var(--bg)}
 th.col,td.col{background:var(--hi2)}
 tr.hit td{background:var(--hi);font-weight:600}
 tr.hit td.col{background:var(--glow);color:#1B2530}
+
+/* Pračka – navazuje na barevnost a komponenty hlavní aplikace */
+.wash-panel{margin:14px 0;padding:16px;background:var(--sf);border:1px solid var(--ln);border-radius:14px}
+.wash-step{margin:0 0 10px;font-weight:700}
+.wash-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.wash-choice{min-height:62px;padding:12px;text-align:left;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--ln);border-radius:12px;cursor:pointer}
+.wash-choice strong{display:block;font-size:1rem}
+.wash-choice small{display:block;color:var(--mut);font-size:.82rem;margin-top:2px}
+.wash-choice[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--on)}
+.wash-choice[aria-pressed="true"] small{color:inherit;opacity:.78}
+.wash-toggle-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.wash-toggle,.wash-plain-button{font:inherit;color:var(--ink);background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:10px 13px;min-height:44px;cursor:pointer}
+.wash-toggle[aria-pressed="true"]{background:var(--hi);border-color:var(--glow);font-weight:700}
+.wash-toggle:disabled{opacity:.45;cursor:not-allowed}
+.wash-note{color:var(--mut);font-size:.85rem;flex:1 1 180px}
+.wash-result{border:2px solid var(--teal)}
+.wash-empty{margin:0;color:var(--mut);text-align:center;padding:10px 0}
+.wash-badge{display:inline-block;background:var(--hi2);border:1px solid var(--glow);border-radius:999px;padding:4px 9px;font-size:.75rem;font-weight:700;margin-bottom:9px}
+.wash-program{font-size:1.65rem;font-weight:700;line-height:1.15;margin:0 0 8px}
+.wash-reason{margin:0 0 14px;color:var(--mut)}
+.wash-specs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.wash-spec{background:var(--bg);border-radius:10px;padding:10px;min-width:0}
+.wash-spec small{display:block;color:var(--mut);font-size:.82rem}
+.wash-spec strong{display:block;overflow-wrap:anywhere}
+.wash-description{margin:12px 0 0}
+.wash-warning{margin-top:12px;padding:11px;border-radius:10px;background:var(--hi2);font-size:.9rem}
+.wash-alt{border-top:1px solid var(--ln);margin-top:15px;padding-top:12px}
+.wash-alt h3{font-size:1rem;margin:0 0 7px}
+.wash-alt-item{padding:8px 0;border-bottom:1px solid var(--ln)}
+.wash-alt-item:last-child{border-bottom:0}
+.wash-alt-item strong{display:block}
+.wash-alt-item span{display:block;color:var(--mut);font-size:.88rem}
+.wash-actions{display:flex;justify-content:flex-end;margin:8px 0 20px}
+.wash-reset{font:inherit;color:var(--mut);background:transparent;border:0;padding:8px;cursor:pointer}
+.wash-all-item{padding:12px 0;border-top:1px solid var(--ln)}
+.wash-all-item:first-child{border-top:0}
+.wash-all-item h3{font-size:1rem;margin:0 0 5px}
+.wash-all-item p{color:var(--mut);font-size:.9rem;margin:4px 0}
+.wash-all-item .wash-specs{margin-top:8px}
+@media(max-width:420px){.wash-choices{grid-template-columns:1fr}.wash-program{font-size:1.45rem}}
 </style>
 
   <!-- Ikony aplikace: cesty relativní ke složce /Grill_helper/ -->
@@ -64,7 +104,7 @@ tr.hit td.col{background:var(--glow);color:#1B2530}
 <p class="sub">Vyberte spotřebič a zjistěte správné nastavení.</p>
 <div class="home">
 <button class="tile" onclick="show('grill')"><b>Grill</b><span>Teplota a doba podle funkce, tloušťky a propečení</span></button>
-<button class="tile w" onclick="show('pracka')"><b>Pračka</b><span>Sekce se připravuje</span></button>
+<button class="tile w" onclick="show('pracka')"><b>Pračka</b><span>Doporučení pracího programu podle náplně, barvy a typu prádla</span></button>
 </div>
 </section>
 
@@ -85,7 +125,36 @@ tr.hit td.col{background:var(--glow);color:#1B2530}
 <section id="pracka" hidden>
 <button class="back" onclick="show('home')">← Spotřebiče</button>
 <h1>Pračka</h1>
-<p class="sub">Tato sekce je zatím prázdná.</p>
+<p class="sub">Vyberte přibližnou hmotnost, barvu a typ prádla. Rádce doporučí dostupný program podle údajů k pračce.</p>
+
+<div class="wash-panel">
+  <div class="wash-step">1. Množství prádla</div>
+  <div class="wash-choices" id="washLoadChoices"></div>
+  <div class="wash-toggle-row">
+    <button type="button" class="wash-toggle" id="halfLoadToggle" aria-pressed="false">½ Poloviční náplň</button>
+    <span class="wash-note">Použijte jen při menší náplni. Nejde o kapacitu programu.</span>
+  </div>
+</div>
+
+<div class="wash-panel">
+  <div class="wash-step">2. Barva prádla</div>
+  <div class="wash-choices" id="washColorChoices"></div>
+</div>
+
+<div class="wash-panel">
+  <div class="wash-step">3. Typ prádla</div>
+  <div class="wash-choices" id="washTypeChoices"></div>
+</div>
+
+<div class="wash-panel wash-result" id="washOutput" aria-live="polite">
+  <p class="wash-empty">Zvolte všechny tři parametry.</p>
+</div>
+
+<div class="wash-panel">
+  <button type="button" class="wash-plain-button" id="showAllWashPrograms" aria-expanded="false">Zobrazit všechny programy pračky</button>
+  <div id="washAllPrograms" hidden></div>
+</div>
+<div class="wash-actions"><button type="button" class="wash-reset" id="washReset">Resetovat výběr</button></div>
 </section>
 </main>
 <script>
@@ -129,7 +198,160 @@ function render(){
 mk($('#fn'),K,'fn');
 mk($('#lv'),D[K[0]].h.slice(3,7).map(x=>x.replace(/ \(s\)$/,'')),'lv');
 $('#t').oninput=e=>{S.t=e.target.value===''?null:Math.round(+e.target.value);render()};
+
 render();
+
+/* ============================================================
+   PRAČKA – data a doporučovací logika
+   Zdroj programů: dodaný manuál a wash.json.
+   Hodnoty null znamenají, že údaj v podkladu není uveden.
+   ============================================================ */
+const WASH_PROGRAMS = [
+  {nazev:"RYCHLÝ",napln_kg:1,teplota_c:30,max_teplota_c:30,otacky:800,max_otacky:1200,popis:"Malá náplň mírně znečištěného prádla.",group:"mala_napln"},
+  {nazev:"OSVĚŽENÍ PÁROU",napln_kg:1,teplota_c:null,max_teplota_c:null,otacky:null,max_otacky:null,popis:"Ošetření párou proti záhybům a zápachu; není určeno pro běžné praní silně znečištěného prádla.",group:"mala_napln"},
+  {nazev:"SPECIÁLNÍ 39'",napln_kg:1,teplota_c:30,max_teplota_c:30,otacky:800,max_otacky:1200,popis:"Lehce znečištěné tkaniny; délka cyklu 39 minut.",group:"mala_napln"},
+  {nazev:"JEMNÉ",napln_kg:1.5,teplota_c:30,max_teplota_c:40,otacky:400,max_otacky:400,popis:"Jemné prádlo a nízká teplota. Šetrné odstřeďování.",group:"mala_napln"},
+  {nazev:"BAVLNA",napln_kg:7,teplota_c:30,max_teplota_c:90,otacky:1200,max_otacky:1200,popis:"Program pro bavlněné prádlo; v manuálu je uvedeno praní barevné bavlny při 40 °C nebo silně znečištěné odolné bavlny při 60–90 °C.",group:"velka_napln"},
+  {nazev:"20 °C PRANÍ ZA STUDENA",napln_kg:7,teplota_c:20,max_teplota_c:20,otacky:1000,max_otacky:1000,popis:"Různé tkaniny a barvy při nízké teplotě.",group:"velka_napln"},
+  {nazev:"HYGIENICKÝ PLUS 59'",napln_kg:1.5,teplota_c:60,max_teplota_c:90,otacky:1200,max_otacky:1200,popis:"Hygienické praní bavlněného prádla; kombinuje páru a máchání.",group:"mala_napln"},
+  {nazev:"SYNTETIKA",napln_kg:3.5,teplota_c:40,max_teplota_c:60,otacky:1200,max_otacky:1200,popis:"Různé syntetické tkaniny a barvy.",group:"stredni_napln"},
+  {nazev:"ČIŠTĚNÍ BUBNU",napln_kg:null,teplota_c:90,max_teplota_c:90,otacky:null,max_otacky:null,popis:"Čištění pračky bez prádla a bez pracího prostředku. Manuál doporučuje spustit přibližně po 50 pracích cyklech.",group:"bez_uvedene_naplne",service:true},
+  {nazev:"MÁCHÁNÍ",napln_kg:7,teplota_c:null,max_teplota_c:null,otacky:1000,max_otacky:1000,popis:"Máchání jakéhokoli typu tkaniny.",group:"velka_napln",service:true},
+  {nazev:"ODČERPÁNÍ A ODSTŘEDĚNÍ",napln_kg:7,teplota_c:null,max_teplota_c:null,otacky:1000,max_otacky:1200,popis:"Vypuštění vody a odstředění; lze upravit nebo zrušit odstřeďování.",group:"velka_napln",service:true},
+  {nazev:"ECO 40–60",napln_kg:7,teplota_c:40,max_teplota_c:90,otacky:1200,max_otacky:1200,popis:"Normálně znečištěné bavlněné prádlo, které lze podle manuálu prát při 40 °C nebo 60 °C. Program je určen také pro posouzení energetické účinnosti.",group:"velka_napln"}
+];
+
+const WASH_RULES = {
+  typeRules:{
+    delicate:{preferred:["JEMNÉ"],avoid:["HYGIENICKÝ PLUS 59'","BAVLNA","ECO 40–60","SYNTETIKA"]},
+    clothing:{preferred:["SYNTETIKA","BAVLNA","20 °C PRANÍ ZA STUDENA"],avoid:[]},
+    towels_bedding:{preferred:["BAVLNA","ECO 40–60","HYGIENICKÝ PLUS 59'"],avoid:["JEMNÉ","RYCHLÝ","SPECIÁLNÍ 39'","OSVĚŽENÍ PÁROU"]},
+    workwear:{preferred:["BAVLNA","ECO 40–60"],avoid:["JEMNÉ","RYCHLÝ","SPECIÁLNÍ 39'","OSVĚŽENÍ PÁROU"]}
+  },
+  colorRules:{
+    color:{preferred:["BAVLNA","SYNTETIKA","20 °C PRANÍ ZA STUDENA"]},
+    white:{preferred:["HYGIENICKÝ PLUS 59'","ECO 40–60","BAVLNA"]}
+  }
+};
+
+const washState={load:null,color:null,type:null,halfLoad:false};
+const washLoadOptions=[
+  ["small","1 kg","Malá náplň"],
+  ["medium","3 kg","Střední náplň"],
+  ["large","5 kg","Velká náplň"]
+];
+const washColorOptions=[["white","Bílé",""],["color","Barevné",""]];
+const washTypeOptions=[
+  ["delicate","Jemné","Citlivé tkaniny"],
+  ["clothing","Běžné oblečení","Každodenní prádlo"],
+  ["towels_bedding","Ručníky a ložní","Odolnější bavlna"],
+  ["workwear","Montérky","Odolné, silněji znečištěné"]
+];
+
+function renderWashChoices(id,options,key){
+  const el=document.getElementById(id);
+  el.innerHTML="";
+  options.forEach(([value,label,hint])=>{
+    const b=document.createElement("button");
+    b.type="button";b.className="wash-choice";b.dataset.value=value;
+    b.setAttribute("aria-pressed",String(washState[key]===value));
+    b.innerHTML=`<strong>${label}</strong>${hint?`<small>${hint}</small>`:""}`;
+    b.addEventListener("click",()=>{
+      washState[key]=value;
+      if(key==="load" && value==="large") washState.halfLoad=false;
+      renderWashChoices("washLoadChoices",washLoadOptions,"load");
+      renderWashChoices("washColorChoices",washColorOptions,"color");
+      renderWashChoices("washTypeChoices",washTypeOptions,"type");
+      renderWash();
+    });
+    el.appendChild(b);
+  });
+}
+function washEsc(value){
+  return String(value).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function washLoadKg(){
+  return ({small:1,medium:3,large:5})[washState.load] ?? null;
+}
+function washCandidates(){
+  const kg=washLoadKg();
+  return WASH_PROGRAMS.filter(p=>!p.service && p.napln_kg!==null && p.napln_kg>=kg);
+}
+function washScore(p){
+  const typeRule=WASH_RULES.typeRules[washState.type];
+  const colorRule=WASH_RULES.colorRules[washState.color];
+  let score=0;const reasons=[];
+  if(typeRule.preferred.includes(p.nazev)){score+=50;reasons.push("odpovídá zvolenému typu prádla");}
+  if(typeRule.avoid.includes(p.nazev))score-=100;
+  if(colorRule.preferred.includes(p.nazev)){score+=20;reasons.push("odpovídá volbě barvy");}
+  if(washState.type==="delicate" && p.teplota_c!=null && p.teplota_c<=30)score+=15;
+  if((washState.type==="towels_bedding"||washState.type==="workwear") && p.teplota_c!=null && p.teplota_c>=40)score+=10;
+  if(p.nazev==="20 °C PRANÍ ZA STUDENA" && washState.color==="color")score+=5;
+  return {program:p,score,reasons};
+}
+function washValue(v,unit=""){
+  return v==null?"neuvedeno":`${v}${unit}`;
+}
+function renderWash(){
+  const out=document.getElementById("washOutput");
+  const halfBtn=document.getElementById("halfLoadToggle");
+  halfBtn.setAttribute("aria-pressed",String(washState.halfLoad));
+  halfBtn.disabled=!washState.load || washState.load==="large";
+  if(!washState.load||!washState.color||!washState.type){
+    out.innerHTML='<p class="wash-empty">Zvolte množství, barvu a typ prádla.</p>';
+    return;
+  }
+  const ranked=washCandidates().map(washScore).sort((a,b)=>b.score-a.score);
+  const top=ranked[0];
+  if(!top){
+    out.innerHTML='<div class="wash-warning">V dostupných datech není potvrzen program s dostatečnou kapacitou pro tuto náplň.</div>';
+    return;
+  }
+  const p=top.program;
+  const reasons=[`kapacita programu je nejméně ${washLoadKg()} kg`,...top.reasons];
+  if(washState.halfLoad)reasons.push("je zvolena funkce poloviční náplně");
+  out.innerHTML=`
+    <div class="wash-badge">DOPORUČENÝ PROGRAM</div>
+    <h2 class="wash-program">${washEsc(p.nazev)}</h2>
+    <p class="wash-reason">${washEsc(reasons.join("; "))+ "."}</p>
+    <div class="wash-specs">
+      <div class="wash-spec"><small>Kapacita programu</small><strong>${washValue(p.napln_kg," kg")}</strong></div>
+      <div class="wash-spec"><small>Základní teplota</small><strong>${washValue(p.teplota_c," °C")}</strong></div>
+      <div class="wash-spec"><small>Max. teplota v tabulce</small><strong>${washValue(p.max_teplota_c," °C")}</strong></div>
+      <div class="wash-spec"><small>Odstřeďování</small><strong>${washValue(p.otacky," ot./min")}</strong></div>
+    </div>
+    <p class="wash-description">${washEsc(p.popis)}</p>
+    ${washState.halfLoad?'<div class="wash-warning">Před spuštěním zapněte na pračce tlačítko poloviční náplně, pokud to zvolený program dovoluje. Ověřte symbol v manuálu.</div>':""}
+    ${ranked.length>1?`<div class="wash-alt"><h3>Další vhodné možnosti</h3>${ranked.slice(1,3).map(x=>`<div class="wash-alt-item"><strong>${washEsc(x.program.nazev)}</strong><span>${washEsc(x.program.popis)}</span></div>`).join("")}</div>`:""}
+    <div class="wash-warning">Doporučení vychází z omezeného seznamu programů a obecných pravidel. Vždy se řiďte štítkem na oděvu a pokyny výrobce textilu.</div>
+  `;
+}
+document.getElementById("halfLoadToggle").addEventListener("click",()=>{
+  if(!washState.load||washState.load==="large")return;
+  washState.halfLoad=!washState.halfLoad;renderWash();
+});
+document.getElementById("washReset").addEventListener("click",()=>{
+  washState.load=null;washState.color=null;washState.type=null;washState.halfLoad=false;
+  renderWashChoices("washLoadChoices",washLoadOptions,"load");
+  renderWashChoices("washColorChoices",washColorOptions,"color");
+  renderWashChoices("washTypeChoices",washTypeOptions,"type");
+  renderWash();
+});
+document.getElementById("showAllWashPrograms").addEventListener("click",()=>{
+  const box=document.getElementById("washAllPrograms");
+  const button=document.getElementById("showAllWashPrograms");
+  const opening=box.hidden;
+  box.hidden=!opening;button.setAttribute("aria-expanded",String(opening));
+  button.textContent=opening?"Skrýt seznam programů":"Zobrazit všechny programy pračky";
+  if(opening && !box.dataset.rendered){
+    box.innerHTML=WASH_PROGRAMS.map(p=>`<article class="wash-all-item"><h3>${washEsc(p.nazev)}</h3><p>${washEsc(p.popis)}</p><div class="wash-specs"><div class="wash-spec"><small>Kapacita</small><strong>${washValue(p.napln_kg," kg")}</strong></div><div class="wash-spec"><small>Teplota</small><strong>${washValue(p.teplota_c," °C")}</strong></div><div class="wash-spec"><small>Max. teplota</small><strong>${washValue(p.max_teplota_c," °C")}</strong></div><div class="wash-spec"><small>Otáčky</small><strong>${washValue(p.otacky," ot./min")}</strong></div></div></article>`).join("");
+    box.dataset.rendered="true";
+  }
+});
+renderWashChoices("washLoadChoices",washLoadOptions,"load");
+renderWashChoices("washColorChoices",washColorOptions,"color");
+renderWashChoices("washTypeChoices",washTypeOptions,"type");
+renderWash();
 </script>
 </body>
 </html>
